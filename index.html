@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>enCurt | Link Seguro</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --secondary: #ef4444;
+            --bg: #0f172a;
+            --card: rgba(255, 255, 300, 0.05);
+            --tiktok: #fe2c55;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            position: relative;
+        }
+
+        /* LOGO E CRÉDITOS */
+        .logo { position: absolute; top: 20px; left: 20px; font-size: 1.5rem; font-weight: bold; color: var(--primary); }
+        .footer-credits { position: fixed; bottom: 10px; right: 20px; font-size: 0.75rem; color: rgba(255,255,255,0.4); }
+
+        .container {
+            background: var(--card);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 2rem;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+            z-index: 10;
+        }
+
+        .ad-slot { margin: 15px 0; width: 100%; max-width: 728px; text-align: center; }
+        .ad-slot img { width: 100%; border-radius: 8px; cursor: pointer; }
+
+        .step-counter { font-size: 0.9rem; color: #94a3b8; margin-bottom: 10px; }
+        .timer-circle {
+            width: 80px; height: 80px; border-radius: 50%; border: 4px solid var(--primary);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.8rem; font-weight: bold; margin: 1rem auto;
+        }
+
+        .btn {
+            background-color: var(--primary); color: white; border: none; padding: 14px;
+            border-radius: 8px; font-weight: 600; cursor: pointer; width: 100%; transition: 0.3s;
+            opacity: 0.5; pointer-events: none;
+        }
+        .btn.active { opacity: 1; pointer-events: auto; }
+        .btn-tiktok { background-color: var(--tiktok); opacity: 1; pointer-events: auto; margin-bottom: 10px; }
+
+        /* BARRA DE PROGRESSO */
+        .progress-container { width: 100%; height: 8px; background: #334155; border-radius: 10px; margin: 15px 0; display: none; overflow: hidden; }
+        .progress-bar { width: 0%; height: 100%; background: #22c55e; transition: width 5s linear; }
+
+        /* BLOQUEIO */
+        #blocker {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.98); z-index: 100;
+            flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center;
+        }
+        #closeBlocker { margin-top: 20px; background: #22c55e; display: none; }
+        .text-red { color: var(--secondary); font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="logo">enCurt</div>
+
+    <div class="ad-slot">
+        <a href="https://vivo.com.br" target="_blank">
+            <img src="https://vivo.com.br/content/dam/vivo-sites/vivo-com-br/para-empresas/imagens/hero/vivo-empresas-gestao-dispositivos-mulher-paleto-2409-mobile-1212x808.webp" alt="Anúncio Topo">
+        </a>
+    </div>
+
+    <div id="mainStepUI" class="container">
+        <div class="step-counter" id="stepText">Passo 1 / 6</div>
+        <h2 id="mainTitle">Aguarde...</h2>
+        <div class="timer-circle" id="timer">20</div>
+        <button id="nextBtn" class="btn" onclick="handleFlow()">Próximo Passo</button>
+    </div>
+
+    <div id="tiktokUI" class="container" style="display: none;">
+        <h2 class="text-red">Um passo para terminar!!</h2>
+        <p>Siga no meu TikTok para desbloquear</p>
+        <a href="https://www.tiktok.com/@descocriandk11?_r=1&_t=ZS-940JypBjDUr" target="_blank" class="btn btn-tiktok" onclick="startFinalProgress()">Seguir no TikTok</a>
+        <div class="progress-container" id="pContainer"><div class="progress-bar" id="pBar"></div></div>
+        <button id="finalLinkBtn" class="btn">Obter Link Final</button>
+    </div>
+
+    <div class="ad-slot">
+        <a href="https://vivo.com.br" target="_blank">
+            <img src="https://vivo.com.br/content/dam/vivo-sites/vivo-com-br/para-empresas/imagens/hero/vivo-empresas-gestao-dispositivos-mulher-paleto-2409-mobile-1212x808.webp" alt="Anúncio Rodapé">
+        </a>
+    </div>
+
+    <div id="blocker">
+        <h2 class="text-red">BLOQUEADO</h2>
+        <p>Clique na imagem abaixo e aguarde para liberar</p>
+        <div class="ad-slot">
+            <a href="https://google.com" target="_blank" onclick="imageClicked()">
+                <img src="https://picsum.photos/300/250?ads" alt="Anúncio Bloqueio">
+            </a>
+        </div>
+        <button id="closeBlocker" class="btn active" onclick="closeModal()">Continuar</button>
+    </div>
+
+    <div class="footer-credits">Ⓘ By descoKi-ando no tiktok</div>
+
+    <script>
+        let currentStep = 1, timeLeft = 20, timerRunning = true, hasClickedAd = false, timerInterval;
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                if (timerRunning && timeLeft > 0) {
+                    timeLeft--;
+                    document.getElementById('timer').textContent = timeLeft;
+                    if (timeLeft === 10 && !hasClickedAd) showBlocker();
+                }
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    document.getElementById('timer').innerHTML = "✓";
+                    document.getElementById('nextBtn').classList.add('active');
+                }
+            }, 1000);
+        }
+
+        function showBlocker() {
+            timerRunning = false;
+            document.getElementById('blocker').style.display = 'flex';
+        }
+
+        function imageClicked() {
+            // Espera 2 segundos após o clique para mostrar o botão de fechar
+            setTimeout(() => {
+                document.getElementById('closeBlocker').style.display = 'block';
+            }, 2000);
+        }
+
+        function closeModal() {
+            hasClickedAd = true;
+            document.getElementById('blocker').style.display = 'none';
+            document.getElementById('closeBlocker').style.display = 'none';
+            timerRunning = true;
+        }
+
+        function handleFlow() {
+            if (currentStep < 6) {
+                currentStep++;
+                timeLeft = 20; hasClickedAd = false;
+                document.getElementById('stepText').textContent = `Passo ${currentStep} / 6`;
+                document.getElementById('nextBtn').classList.remove('active');
+                startTimer();
+            } else {
+                document.getElementById('mainStepUI').style.display = 'none';
+                document.getElementById('tiktokUI').style.display = 'block';
+            }
+        }
+
+        function startFinalProgress() {
+            document.getElementById('pContainer').style.display = 'block';
+            setTimeout(() => { document.getElementById('pBar').style.width = "100%"; }, 100);
+            setTimeout(() => {
+                const fBtn = document.getElementById('finalLinkBtn');
+                fBtn.classList.add('active');
+                fBtn.textContent = "CONCLUÍDO - CLIQUE AQUI";
+                fBtn.onclick = () => window.location.href = "https://www.mediafire.com/file/7yiuwdi509kfm8v/TheKingCheatsSafe_V201.apks/file?dkey=55xscnh298g&r=662";
+            }, 5100);
+        }
+
+        startTimer();
+    </script>
+</body>
+</html>
